@@ -21,7 +21,7 @@ body {
   transition: background 0.3s, color 0.3s;
 }
 
-/* Dark mode styles */
+/* Dark mode */
 body.dark-mode {
   background: #121212;
   color: #eee;
@@ -36,7 +36,6 @@ body.dark-mode {
   border-radius: 30px;
   padding: 40px 20px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-  position: relative;
   margin-top: 20px;
 }
 
@@ -47,19 +46,29 @@ body.dark-mode {
   text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
 }
 
-.banner .datetime {
-  margin-top: 15px;
-  font-size: 1.3rem;
+/* Date & live time below banner */
+.datetime-container {
+  width: 90%;
+  max-width: 900px;
+  background-color: rgba(0,0,0,0.6);
+  border-radius: 20px;
+  padding: 12px 20px;
+  margin-top: -30px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
   font-weight: bold;
   color: #fffa9e;
 }
 
-/* Notification banner */
+/* Notification banner with gold color */
 .notification-banner {
   width: 90%;
   max-width: 900px;
-  background-color: rgba(0,0,0,0.7);
-  color: #fff;
+  background-color: gold;
+  color: #000;
   padding: 12px 0;
   overflow: hidden;
   border-radius: 20px;
@@ -70,13 +79,17 @@ body.dark-mode {
 .notification-banner .marquee {
   display: inline-block;
   white-space: nowrap;
+  position: relative;
+  left: 50%; /* start at center */
+  transform: translateX(-50%);
   animation: marquee 15s linear infinite;
   font-size: 1.2rem;
+  font-weight: bold;
 }
 
 @keyframes marquee {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+  0% { transform: translateX(-50%); } /* center */
+  100% { transform: translateX(-150%); } /* scroll left */
 }
 
 /* Toggle dark mode button */
@@ -136,11 +149,13 @@ tr:hover {
 </head>
 <body>
 
-  <!-- Top banner with Salah title and live datetime -->
+  <!-- Top banner with Salah title -->
   <div class="banner">
     <h1>Moghul Park Masjid Salah Times</h1>
-    <div class="datetime" id="datetime"></div>
   </div>
+
+  <!-- Date & live time below banner -->
+  <div class="datetime-container" id="datetime"></div>
 
   <!-- Moving notification banner -->
   <div class="notification-banner">
@@ -202,7 +217,7 @@ tr:hover {
       const notifications = [
         nextSalah ? `Next Salah: ${nextSalah} at ${prayerTimes[nextSalah]}` : "All Salahs completed for today",
         "Welcome to Moghul Park Masjid!",
-        "Next Programme: ........."
+        "Remember to perform Wudu before Salah"
       ];
       document.getElementById("notification-text").innerText = notifications.join(" — ");
 
@@ -231,5 +246,3 @@ tr:hover {
 
 </body>
 </html>
-
-
