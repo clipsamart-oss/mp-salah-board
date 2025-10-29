@@ -1,20 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Moghul Park Masjid Salah Times</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moghul Park Masjid Salah Times</title>
+
+<style>
+  /* Body & page layout */
+  body {
+    font-family: "Poppins", sans-serif;
+    background: radial-gradient(circle at top, #004d40, #001a12);
+    color: white;
+    text-align: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Top banner */
+  .banner {
+    width: 90%;
+    max-width: 900px;
+    background: url('images.jpg') no-repeat center center;
+    background-size: cover;
+    border-radius: 30px;
+    padding: 40px 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    position: relative;
+    margin-top: 20px;
+  }
+
+  .banner h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    color: white;
+    text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+  }
+
+  .banner .datetime {
+    margin-top: 15px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #fffa9e;
+  }
+
+  /* Prayer times table */
+  table {
+    margin: 20px auto;
+    border-collapse: collapse;
+    width: 90%;
+    max-width: 600px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  th, td {
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 1.3rem;
+  }
+
+  th {
+    background-color: rgba(0, 150, 136, 0.5);
+  }
+
+  tr:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Highlight next Salah */
+  .next-salah {
+    background-color: rgba(255, 255, 0, 0.8);
+    color: #000;
+    font-weight: bold;
+    font-size: 1.5rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+</style>
 </head>
 <body>
-  <header>
-    <h1>Moghul Park Masjid Salah Time</h1>
-  </header>
-  
-  <div id="clock"></div>
-  <div id="hijri"></div>
+
+  <!-- Top banner with Salah title and live datetime -->
+  <div class="banner">
+    <h1>Masjid Salah Times</h1>
+    <div class="datetime" id="datetime"></div>
+  </div>
+
+  <!-- Prayer times table -->
   <div id="prayer-times">Loading today's times...</div>
 
-  <script src="script.js"></script>
+<script>
+  // Update live date & time at top
+  function updateDateTime() {
+    const now = new Date();
+    const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+    const dateStr = now.toLocaleDateString(undefined, options);
+    const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+    document.getElementById("datetime").innerText = `${dateStr} | ${timeStr}`;
+  }
+
+  setInterval(updateDateTime, 1000);
+  updateDateTime();
+
+  // Convert "HH:MM" string to minutes
+  function timeToMinutes(time) {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  // Display prayer times from timings.json and highlight next Salah
+  async function displayPrayerTimes() {
+    try {
+      const response = await fetch('timings.json');
+      if (!response.ok) throw new Error("Failed to load timings.json");
+
+      const prayerTimes = await response.json(); 
+
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+      let nextSalah = null;
+      for (const [name, time] of Object.entries(prayerTimes)) {
+        if (!time) continue;
+        const minutes = timeToMinutes(time);
+        if (minutes > currentMinutes) {
+          nextSalah = name;
+          break;
+        }
+      }
+
+      let tableHTML = `<table>
+        <tr><th>Prayer</th><th>Time</th></tr>`;
+      for (const [name, time] of Object.entries(prayerTimes)) {
+        const highlightClass = name === nextSalah ? "next-salah" : "";
+        tableHTML += `<tr class="${highlightClass}"><td>${name}</td><td>${time}</td></tr>`;
+      }
+      tableHTML += `</table>`;
+
+      document.getElementById("prayer-times").innerHTML = tableHTML;
+
+    } catch (error) {
+      console.error(error);
+      document.getElementById("prayer-times").innerText = "Failed to load prayer times.";
+    }
+  }
+
+  // Initial display
+  displayPrayerTimes();
+  setInterval(displayPrayerTimes, 60000);
+
+</script>
+
 </body>
 </html>
