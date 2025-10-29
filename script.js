@@ -1,48 +1,52 @@
-async function loadTimings() {
-  const response = await fetch("timings.json");
-  const data = await response.json();
-
-  const today = new Date().toISOString().slice(0, 10);
-  const todayTiming = data.find(d => d.date === today);
-
-  const dateEl = document.getElementById("date");
-  dateEl.textContent = new Date().toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
-
-  if (todayTiming) {
-    document.getElementById("fajr").textContent = todayTiming.fajr;
-    document.getElementById("sunrise").textContent = todayTiming.sunrise;
-    document.getElementById("dhuhr").textContent = todayTiming.dhuhr;
-    document.getElementById("asr").textContent = todayTiming.asr;
-    document.getElementById("maghrib").textContent = todayTiming.maghrib;
-    document.getElementById("isha").textContent = todayTiming.isha;
-    showNextPrayer(todayTiming);
-  } else {
-    document.querySelector(".times").innerHTML =
-      "<p>No data found for today</p>";
-  }
-}
-
-function showNextPrayer(times) {
+// Live Clock
+function updateClock() {
   const now = new Date();
-  const currentTime = now.getHours() * 60 + now.getMinutes();
+  const time = now.toLocaleTimeString('en-GB', { hour12: false });
+  document.getElementById("clock").textContent = "🕒 " + time;
+}
+setInterval(updateClock, 1000);
+updateClock();
 
-  const order = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];
-  for (let i = 0; i < order.length; i++) {
-    const [h, m] = times[order[i]].split(":").map(Number);
-    const total = h * 60 + m;
-    if (currentTime < total) {
-      document.getElementById("next").textContent =
-        "Next Prayer: " + order[i].toUpperCase() + " at " + times[order[i]];
+// Hijri Date
+function showHijriDate() {
+  const hijriDate = new Intl.DateTimeFormat('en-TN-u-ca-islamic', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  }).format(new Date());
+  document.getElementById("hijri").textContent = "🗓 Hijri: " + hijriDate;
+}
+showHijriDate();
+
+// Load Salah Timings
+const jsonURL = "timings.json"; // Must be in same folder
+
+async function loadPrayerTimes() {
+  try {
+    const response = await fetch(jsonURL);
+    if (!response.ok) throw new Error("Failed to fetch timings.json");
+
+    const data = await response.json();
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const timings = data[today];
+
+    const board = document.getElementById("prayer-times");
+
+    if (!timings) {
+      board.innerHTML = `<p>No timings found for today (${today})</p>`;
       return;
     }
+
+    board.innerHTML = `
+      <table>
+        <tr><th>Prayer</th><th>Time</th></tr>
+        ${Object.entries(timings)
+          .map(([name, time]) => `<tr><td>${name}</td><td>${time}</td></tr>`)
+          .join("")}
+      </table>
+    `;
+  } catch (error) {
+    document.getElementById("prayer-times").innerHTML = `<p>Error loading timings: ${error}</p>`;
+    console.error(error);
   }
-  document.getElementById("next").textContent = "All prayers completed for today.";
 }
 
-loadTimings();
-setInterval(loadTimings, 60 * 60 * 1000); // refresh hourly
+loadPrayerTimes();
