@@ -14,6 +14,7 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    margin: 0;
     transition: background 0.5s, color 0.5s;
   }
 
@@ -22,20 +23,21 @@
     color: #f2f2f2;
   }
 
-  /* Banner */
+  /* Banner with image */
   .banner {
     width: 90%;
     margin: 20px auto;
     padding: 20px;
-    background: linear-gradient(135deg, #b8860b, #ffd700);
-    color: black;
+    background: url('images.jpg') no-repeat center center/cover;
+    color: white;
     border-radius: 40px 40px 80px 80px;
-    box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
   }
 
   .banner h1 {
     margin: 0;
     font-size: 2.3rem;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
   }
 
   /* Date and Time Section */
@@ -45,7 +47,7 @@
     color: #fffa9e;
   }
 
-  /* Moving Marquee Banner */
+  /* Moving Marquee Banner (left-to-right) */
   .notification-banner {
     position: relative;
     width: 90%;
@@ -58,38 +60,19 @@
     box-shadow: 0 0 10px rgba(255,215,0,0.4);
   }
 
-  .notification-banner::before,
-  .notification-banner::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    width: 60px;
-    height: 100%;
-    z-index: 1;
-  }
-
-  .notification-banner::before {
-    left: 0;
-    background: linear-gradient(to right, rgba(184,134,11,1), transparent);
-  }
-
-  .notification-banner::after {
-    right: 0;
-    background: linear-gradient(to left, rgba(184,134,11,1), transparent);
-  }
-
   .marquee {
-    position: absolute;
+    display: inline-block;
     white-space: nowrap;
-    animation: marquee 4s linear infinite;
+    position: absolute;
+    animation: marquee 10s linear infinite;
     top: 50%;
     transform: translateY(-50%);
     font-weight: bold;
   }
 
   @keyframes marquee {
-    0% { left: 100%; }
-    100% { left: -100%; }
+    0% { left: -100%; }
+    100% { left: 100%; }
   }
 
   /* Salah Times Table */
@@ -118,7 +101,7 @@
     background-color: rgba(255, 255, 255, 0.15);
   }
 
-  /* Qibla Compass */
+  /* Qiblah Compass */
   #compass {
     position: relative;
     width: 220px;
@@ -195,15 +178,18 @@
     cursor: pointer;
   }
 
-  /* Footer */
+  /* Footer fixed at bottom */
   footer {
-    margin-top: auto;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
     background: linear-gradient(90deg, #b8860b, #ffd700);
     color: black;
     padding: 10px;
-    width: 100%;
     font-weight: bold;
     text-align: center;
+    z-index: 10;
   }
 </style>
 </head>
@@ -229,18 +215,24 @@
     </table>
   </div>
 
-  <div id="compass">
-    <div id="arrow"></div>
-  </div>
-  <div id="status">Allow location to detect Qibla</div>
-  <button onclick="getQibla()">Get Qibla Direction</button>
-
   <div class="controls">
     <label>
       <input type="checkbox" id="darkToggle" class="ios-toggle">
     </label>
     <button class="download-btn" onclick="downloadPDF()">Download PDF</button>
   </div>
+
+  <!-- Google Qiblah Finder Section -->
+  <section style="text-align:center;background:linear-gradient(to bottom right,#064420,#4a3f35);color:white;padding:60px 20px;border-top:5px solid #c2a15a;">
+    <h1 style="font-size:2.2em;margin-bottom:15px;letter-spacing:1px;">🕋 Find Your Qiblah Direction</h1>
+    <p style="font-size:1.1em;margin-bottom:25px;color:#f5f5f5;">Click the button below to open Google’s official Qiblah Finder. It will detect your location and show you the direction of the Kaaba with precision.</p>
+    
+    <div style="display:inline-block;background:white;color:#333;border-radius:15px;padding:30px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:transform 0.4s ease, box-shadow 0.4s ease;">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/d/d1/Kaaba_Mecca.png" alt="Kaaba" style="width:160px;height:auto;margin-bottom:20px;border-radius:10px;">
+      <br>
+      <a href="https://qiblafinder.withgoogle.com/" target="_blank" style="background:#064420;color:white;border:none;padding:12px 25px;font-size:1.1em;border-radius:8px;text-decoration:none;transition:background 0.3s ease;">🧭 Open Qiblah Finder</a>
+    </div>
+  </section>
 
   <footer>
     © 2025 Moghul Park Masjid — All Rights Reserved
@@ -256,7 +248,7 @@
     setInterval(updateDateTime, 1000);
     updateDateTime();
 
-    // --- Next Salah Countdown (example static data) ---
+    // --- Next Salah Countdown ---
     const salahTimes = {
       Fajr: "05:00",
       Dhuhr: "12:30",
@@ -271,10 +263,11 @@
         const [h, m] = time.split(":").map(Number);
         const t = new Date();
         t.setHours(h, m, 0);
+        if (t < now) t.setDate(t.getDate() + 1); // move to next day if passed
         return { name, time: t };
       });
 
-      const next = times.find(t => t.time > now) || times[0];
+      const next = times.reduce((a, b) => (a.time < b.time ? a : b));
       const diff = (next.time - now) / 1000;
       const h = Math.floor(diff / 3600);
       const m = Math.floor((diff % 3600) / 60);
@@ -293,45 +286,6 @@
     // --- Download PDF (placeholder) ---
     function downloadPDF() {
       alert("This will download Salah times as a PDF (to be implemented).");
-    }
-
-    // --- Qibla Finder ---
-    async function getQibla() {
-      const status = document.getElementById('status');
-      const arrow = document.getElementById('arrow');
-
-      if (!navigator.geolocation) {
-        status.textContent = "Geolocation not supported on this device.";
-        return;
-      }
-
-      status.textContent = "Getting your location...";
-
-      navigator.geolocation.getCurrentPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-
-        const bearing = qiblaDirection(lat, lon);
-        status.textContent = `Qibla direction: ${bearing.toFixed(2)}° from North`;
-
-        arrow.style.transform = `rotate(${bearing}deg) translate(-50%, -100%)`;
-      }, err => {
-        status.textContent = "Location access denied or unavailable.";
-      }, { enableHighAccuracy: true });
-    }
-
-    function qiblaDirection(lat, lon) {
-      const kaabaLat = 21.4225 * Math.PI / 180;
-      const kaabaLon = 39.8262 * Math.PI / 180;
-      const userLat = lat * Math.PI / 180;
-      const userLon = lon * Math.PI / 180;
-
-      const deltaLon = kaabaLon - userLon;
-      const x = Math.sin(deltaLon);
-      const y = Math.cos(userLat) * Math.tan(kaabaLat) - Math.sin(userLat) * Math.cos(deltaLon);
-
-      let theta = Math.atan2(x, y) * 180 / Math.PI;
-      return (theta + 360) % 360;
     }
   </script>
 </body>
