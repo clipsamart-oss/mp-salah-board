@@ -47,7 +47,7 @@
     color: #fffa9e;
   }
 
-  /* Moving Marquee Banner */
+  /* Moving Marquee Banner (starts center) */
   .notification-banner {
     position: relative;
     width: 90%;
@@ -65,15 +65,15 @@
     white-space: nowrap;
     position: absolute;
     top: 50%;
-    left: -100%; /* start off-screen immediately */
-    transform: translateY(-50%);
+    left: 50%;
+    transform: translate(-50%, -50%);
     font-weight: bold;
     animation: marquee 10s linear infinite;
   }
 
   @keyframes marquee {
-    0% { left: -100%; }
-    100% { left: 100%; }
+    0% { transform: translateX(-50%) translateY(-50%); }
+    100% { transform: translateX(150%) translateY(-50%); }
   }
 
   /* Salah Times Table */
@@ -100,6 +100,12 @@
 
   tr:hover {
     background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  tr.next-salah {
+    background-color: rgba(255, 215, 0, 0.3);
+    font-weight: bold;
+    color: black;
   }
 
   /* Qiblah Compass */
@@ -206,13 +212,13 @@
   </div>
 
   <div id="prayer-times">
-    <table>
+    <table id="salahTable">
       <tr><th>Salah</th><th>Time</th></tr>
-      <tr><td>Fajr</td><td>05:00</td></tr>
-      <tr><td>Dhuhr</td><td>12:30</td></tr>
-      <tr><td>Asr</td><td>15:45</td></tr>
-      <tr><td>Maghrib</td><td>18:20</td></tr>
-      <tr><td>Isha</td><td>19:45</td></tr>
+      <tr data-salah="Fajr"><td>Fajr</td><td>05:00</td></tr>
+      <tr data-salah="Dhuhr"><td>Dhuhr</td><td>12:30</td></tr>
+      <tr data-salah="Asr"><td>Asr</td><td>15:45</td></tr>
+      <tr data-salah="Maghrib"><td>Maghrib</td><td>18:20</td></tr>
+      <tr data-salah="Isha"><td>Isha</td><td>19:45</td></tr>
     </table>
   </div>
 
@@ -249,7 +255,7 @@
     setInterval(updateDateTime, 1000);
     updateDateTime();
 
-    // --- Next Salah Countdown ---
+    // --- Next Salah Countdown & Highlight ---
     const salahTimes = {
       Fajr: "05:00",
       Dhuhr: "12:30",
@@ -264,7 +270,7 @@
         const [h, m] = time.split(":").map(Number);
         const t = new Date();
         t.setHours(h, m, 0);
-        if (t < now) t.setDate(t.getDate() + 1); // move to next day if passed
+        if (t < now) t.setDate(t.getDate() + 1); // next day if passed
         return { name, time: t };
       });
 
@@ -273,9 +279,20 @@
       const h = Math.floor(diff / 3600);
       const m = Math.floor((diff % 3600) / 60);
 
+      // Update marquee
       document.getElementById("marqueeText").textContent =
         `Next Salah: ${next.name} in ${h}h ${m}m`;
+
+      // Highlight next Salah in table
+      document.querySelectorAll("#salahTable tr").forEach(row => {
+        if (row.dataset.salah === next.name) {
+          row.classList.add("next-salah");
+        } else {
+          row.classList.remove("next-salah");
+        }
+      });
     }
+
     updateNextSalah(); // run immediately
     setInterval(updateNextSalah, 60000);
 
