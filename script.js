@@ -57,3 +57,4 @@ updateClock();
 // Update every minute
 setInterval(displayPrayerTimes, 60000);
 setInterval(updateClock, 1000);
+
