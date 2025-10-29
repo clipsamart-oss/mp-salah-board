@@ -1,25 +1,24 @@
-// Function to convert "HH:MM" to minutes
+// Convert "HH:MM" string to minutes
 function timeToMinutes(time) {
   const [h, m] = time.split(':').map(Number);
   return h * 60 + m;
 }
 
-// Function to display prayer times and highlight next Salah
+// Display prayer times from timings.json and highlight next Salah
 async function displayPrayerTimes() {
   try {
-    // Fetch timings.json
     const response = await fetch('timings.json');
     if (!response.ok) throw new Error("Failed to load timings.json");
 
-    const data = await response.json();
-    // Example structure: { "Fajr":"05:10", "Dhuhr":"12:30", ... }
-    const prayerTimes = data;
+    const prayerTimes = await response.json(); 
+    // Ensure all times are in "HH:MM" 24-hour format
 
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
     let nextSalah = null;
     for (const [name, time] of Object.entries(prayerTimes)) {
+      if (!time) continue; // skip empty values
       const minutes = timeToMinutes(time);
       if (minutes > currentMinutes) {
         nextSalah = name;
@@ -47,7 +46,7 @@ async function displayPrayerTimes() {
 // Update clock
 function updateClock() {
   const now = new Date();
-  const timeString = now.toLocaleTimeString();
+  const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
   document.getElementById("clock").innerText = timeString;
 }
 
