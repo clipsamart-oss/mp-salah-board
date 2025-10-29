@@ -68,7 +68,8 @@
 
   .marquee-text {
     display: inline-block;
-    padding-left: 5%; /* start slightly from left */
+    padding-left: 5%;
+    line-height: 50px; /* vertical centering */
   }
 
   @keyframes scroll {
@@ -161,7 +162,7 @@
     width: 100%;
     background: linear-gradient(90deg, #b8860b, #ffd700);
     color: black;
-    padding: 30px 0;
+    padding: 40px 0;
     font-weight: bold;
     text-align: center;
     line-height: 1.5;
@@ -221,6 +222,7 @@
     Powered by MR
   </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
   // --- Date & Time ---
   function updateDateTime() {
@@ -284,9 +286,26 @@
     document.body.classList.toggle("dark",this.checked);
   });
 
+  // --- Download PDF using jsPDF ---
   function downloadPDF() {
-    alert("This will download Salah times as a PDF (to be implemented).");
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Moghul Park Masjid Salah Times", 105, 20, null, null, "center");
+    const now = new Date();
+    doc.setFontSize(12);
+    doc.text("Date: " + now.toLocaleDateString(), 105, 30, null, null, "center");
+    const table = document.getElementById("salahTable");
+    let y = 45;
+    for (let i = 1; i < table.rows.length; i++) {
+      const salah = table.rows[i].cells[0].textContent;
+      const time = table.rows[i].cells[1].textContent;
+      doc.text(`${salah}: ${time}`, 20, y);
+      y += 10;
+    }
+    doc.save("Salah_Times.pdf");
   }
+
 </script>
 
 </body>
