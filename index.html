@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Moghul Park Masjid Salah Times</title>
-
 <style>
 body {
   font-family: "Poppins", sans-serif;
@@ -16,12 +15,13 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: background 0.5s, color 0.5s;
 }
+.dark-mode { background: #111; color: #eee; }
 .banner {
-  width: 90%;
-  max-width: 900px;
+  width: 90%; max-width: 900px;
   border-radius: 30px;
-  background: url('images/images.jpg') no-repeat center center;
+  background: url('images.jpg') no-repeat center center;
   background-size: cover;
   padding: 40px 20px;
   margin-top: 20px;
@@ -29,8 +29,10 @@ body {
 }
 .banner h1 { margin:0; font-size:2.5rem; color:white; text-shadow:2px 2px 6px rgba(0,0,0,0.7); }
 .datetime-container {
-  width: 90%; max-width: 900px; background-color: rgba(0,0,0,0.6);
-  font-size:1.3rem; font-weight:bold; color:#fffa9e; padding:10px 0; margin-top:20px; border-radius:30px;
+  width: 90%; max-width: 900px;
+  background-color: rgba(0,0,0,0.6);
+  font-size:1.3rem; font-weight:bold; color:#fffa9e;
+  padding:10px 0; margin-top:20px; border-radius:30px;
 }
 .notification-banner {
   width: 90%; max-width:900px; background-color: gold; color:#000;
@@ -58,9 +60,11 @@ th,td{padding:18px;border-bottom:1px solid rgba(255,255,255,0.2); font-size:1.4r
 th{background-color: rgba(0,150,136,0.5);}
 tr:hover{background-color: rgba(255,255,255,0.15);}
 .next-salah { background-color: rgba(255,255,0,0.8); color:#000; font-weight:bold; font-size:1.5rem; border-radius:8px; }
-#qibla-container { margin:20px auto; width:200px; height:200px; border:3px solid #fff; border-radius:50%; position:relative; }
-#needle { position:absolute; top:50%; left:50%; width:4px; height:90px; background:red; transform-origin:bottom center; transform:rotate(0deg) translate(-50%,-100%); border-radius:2px; }
-#compass-center { width:16px; height:16px; background:white; border-radius:50%; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2; }
+#qibla-container { margin:20px auto; width:220px; height:220px; border:3px solid #fff; border-radius:50%; position:relative; background: radial-gradient(circle, rgba(0,0,0,0.2), transparent 70%); }
+#compass-center { position:absolute; top:50%; left:50%; width:16px; height:16px; background:white; border-radius:50%; transform:translate(-50%,-50%); z-index:3; }
+#north { position:absolute; top:10px; left:50%; transform:translateX(-50%); color:white; font-weight:bold; font-size:1.2rem; z-index:4; }
+#red-needle { position:absolute; top:50%; left:50%; width:4px; height:90px; background:red; transform-origin:bottom center; transform:rotate(0deg) translate(-50%,-100%); border-radius:2px; z-index:2; }
+#green-arrow { position:absolute; top:50%; left:50%; width:6px; height:100px; background:limegreen; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); transform-origin:bottom center; transform:rotate(0deg) translate(-50%,-100%); z-index:1; }
 #next-salah-countdown{margin-top:15px; font-size:1.4rem; font-weight:bold; color:#fffa9e;}
 .footer-banner{position:fixed; bottom:0; left:0; width:100%; background-color: rgba(0,0,0,0.8); color:#fffa9e; padding:12px 0; font-size:1rem; text-align:center; z-index:999;}
 </style>
@@ -82,15 +86,18 @@ tr:hover{background-color: rgba(255,255,255,0.15);}
 <div id="prayer-times">Loading today's times...</div>
 
 <div id="qibla-container">
-  <div id="needle"></div>
+  <div id="north">N</div>
+  <div id="green-arrow"></div>
+  <div id="red-needle"></div>
   <div id="compass-center"></div>
 </div>
 
 <div id="next-salah-countdown">Next Salah in: --:--:--</div>
 <div class="footer-banner">&copy; 2025 Moghul Park Masjid. All rights reserved.</div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-// --- Live Date/Time ---
+// Live Date/Time
 function updateDateTime(){
   const now = new Date();
   const options = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
@@ -101,12 +108,12 @@ function updateDateTime(){
 setInterval(updateDateTime,1000);
 updateDateTime();
 
-// --- Dark Mode ---
+// Dark Mode
 document.getElementById("dark-mode-toggle").addEventListener("change",()=>{
   document.body.classList.toggle("dark-mode");
 });
 
-// --- Prayer Times ---
+// Prayer Times
 let prayerTimesGlobal = {};
 function timeToMinutes(t){ return t.split(':').map(Number).reduce((a,b)=>a*60+b); }
 async function displayPrayerTimes(){
@@ -133,17 +140,13 @@ async function displayPrayerTimes(){
     tableHTML+=`</table>`;
     document.getElementById("prayer-times").innerHTML = tableHTML;
 
-    // Update banner
-    updateNotification(nextSalah);
-
     updateCountdown(nextSalah);
-
   }catch(err){ console.error(err);}
 }
 displayPrayerTimes();
 setInterval(displayPrayerTimes,60000);
 
-// --- Countdown ---
+// Countdown + Notification
 function updateCountdown(nextSalah){
   if(!nextSalah || !prayerTimesGlobal[nextSalah]) return;
   const [h,m] = prayerTimesGlobal[nextSalah].split(':').map(Number);
@@ -156,7 +159,6 @@ function updateCountdown(nextSalah){
   const secs = Math.floor((diff%60000)/1000);
   document.getElementById("next-salah-countdown").innerText = `Next Salah in: ${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
 
-  // Update notification banner dynamically
   const notifications = [
     `Next Salah: ${nextSalah} in ${String(hrs).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`,
     "Remember to perform Wudu before Salah",
@@ -175,15 +177,17 @@ setInterval(()=>{
   updateCountdown(nextSalah);
 },1000);
 
-// --- Qibla Compass ---
+// Qibla Compass
 const kaabaLat=21.4225, kaabaLon=39.8262;
-const needle=document.getElementById("needle");
-function updateCompass(userLat,userLon,heading){
-  const dLon = (kaabaLon-userLon)*Math.PI/180;
+const redNeedle=document.getElementById("red-needle");
+const greenArrow=document.getElementById("green-arrow");
+function updateQibla(lat, lon, heading=0){
+  const dLon = (kaabaLon-lon)*Math.PI/180;
   const y = Math.sin(dLon)*Math.cos(kaabaLat*Math.PI/180);
-  const x = Math.cos(userLat*Math.PI/180)*Math.tan(kaabaLat*Math.PI/180) - Math.sin(userLat*Math.PI/180)*Math.cos(dLon);
-  const bearing = Math.atan2(y,x)*180/Math.PI;
-  needle.style.transform = `rotate(${bearing-heading}deg) translate(-50%,-100%)`;
+  const x = Math.cos(lat*Math.PI/180)*Math.tan(kaabaLat*Math.PI/180) - Math.sin(lat*Math.PI/180)*Math.cos(dLon);
+  const bearing = Math.atan2(y,x)*180/Math.PI; // Qibla bearing
+  greenArrow.style.transform = `rotate(${bearing}deg) translate(-50%,-100%)`;
+  redNeedle.style.transform = `rotate(${heading}deg) translate(-50%,-100%)`;
 }
 if(navigator.geolocation){
   navigator.geolocation.getCurrentPosition(pos=>{
@@ -191,14 +195,31 @@ if(navigator.geolocation){
     if(window.DeviceOrientationEvent){
       window.addEventListener("deviceorientation", e=>{
         const heading = e.alpha || 0;
-        updateCompass(lat,lon,heading);
+        updateQibla(lat,lon,heading);
       });
     } else {
-      // fallback: just show direction to Qibla without rotation
-      updateCompass(lat,lon,0);
+      updateQibla(lat,lon,0); // static
     }
   });
 }
+
+// Download PDF
+document.getElementById("download-pdf").addEventListener("click",()=>{
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const table = document.querySelector("#prayer-times table");
+  if(!table) return alert("Prayer times not loaded!");
+  let y=10;
+  doc.setFontSize(16);
+  doc.text("Moghul Park Masjid - Salah Times",105,y,{align:"center"});
+  y+=10;
+  for(let i=0;i<table.rows.length;i++){
+    const row = Array.from(table.rows[i].cells).map(td=>td.innerText);
+    doc.text(row.join(" - "),20,y);
+    y+=10;
+  }
+  doc.save("Salah_Times.pdf");
+});
 </script>
 </body>
 </html>
