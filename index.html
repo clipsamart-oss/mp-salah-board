@@ -6,82 +6,131 @@
 <title>Moghul Park Masjid Salah Times</title>
 
 <style>
-  /* Body & page layout */
-  body {
-    font-family: "Poppins", sans-serif;
-    background: radial-gradient(circle at top, #004d40, #001a12);
-    color: white;
-    text-align: center;
-    min-height: 100vh;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+/* Body & page layout */
+body {
+  font-family: "Poppins", sans-serif;
+  background: radial-gradient(circle at top, #004d40, #001a12);
+  color: white;
+  text-align: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: background 0.3s, color 0.3s;
+}
 
-  /* Top banner */
-  .banner {
-    width: 90%;
-    max-width: 900px;
-    background: url('images.jpg') no-repeat center center;
-    background-size: cover;
-    border-radius: 30px;
-    padding: 40px 20px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-    position: relative;
-    margin-top: 20px;
-  }
+/* Dark mode styles */
+body.dark-mode {
+  background: #121212;
+  color: #eee;
+}
 
-  .banner h1 {
-    margin: 0;
-    font-size: 2.5rem;
-    color: white;
-    text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
-  }
+/* Top banner */
+.banner {
+  width: 90%;
+  max-width: 900px;
+  background: url('images/images.jpg') no-repeat center center;
+  background-size: cover;
+  border-radius: 30px;
+  padding: 40px 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  position: relative;
+  margin-top: 20px;
+}
 
-  .banner .datetime {
-    margin-top: 15px;
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: #fffa9e;
-  }
+.banner h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  color: white;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+}
 
-  /* Prayer times table */
-  table {
-    margin: 20px auto;
-    border-collapse: collapse;
-    width: 90%;
-    max-width: 600px;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  }
+.banner .datetime {
+  margin-top: 15px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #fffa9e;
+}
 
-  th, td {
-    padding: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    font-size: 1.3rem;
-  }
+/* Notification banner */
+.notification-banner {
+  width: 90%;
+  max-width: 900px;
+  background-color: rgba(0,0,0,0.7);
+  color: #fff;
+  padding: 12px 0;
+  overflow: hidden;
+  border-radius: 20px;
+  margin-top: 15px;
+  position: relative;
+}
 
-  th {
-    background-color: rgba(0, 150, 136, 0.5);
-  }
+.notification-banner .marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 15s linear infinite;
+  font-size: 1.2rem;
+}
 
-  tr:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-  }
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
 
-  /* Highlight next Salah */
-  .next-salah {
-    background-color: rgba(255, 255, 0, 0.8);
-    color: #000;
-    font-weight: bold;
-    font-size: 1.5rem;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-  }
+/* Toggle dark mode button */
+#dark-mode-toggle {
+  margin-top: 15px;
+  padding: 8px 16px;
+  font-size: 1rem;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background-color: rgba(0,150,136,0.8);
+  color: white;
+  transition: background 0.3s;
+}
+
+#dark-mode-toggle:hover {
+  background-color: rgba(0,150,136,1);
+}
+
+/* Prayer times table */
+table {
+  margin: 20px auto;
+  border-collapse: collapse;
+  width: 90%;
+  max-width: 600px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+th, td {
+  padding: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.3rem;
+}
+
+th {
+  background-color: rgba(0, 150, 136, 0.5);
+}
+
+tr:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Highlight next Salah */
+.next-salah {
+  background-color: rgba(255, 255, 0, 0.8);
+  color: #000;
+  font-weight: bold;
+  font-size: 1.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
 
 </style>
 </head>
@@ -93,11 +142,19 @@
     <div class="datetime" id="datetime"></div>
   </div>
 
+  <!-- Moving notification banner -->
+  <div class="notification-banner">
+    <div class="marquee" id="notification-text">Loading notifications...</div>
+  </div>
+
+  <!-- Dark mode toggle -->
+  <button id="dark-mode-toggle">Toggle Dark Mode</button>
+
   <!-- Prayer times table -->
   <div id="prayer-times">Loading today's times...</div>
 
 <script>
-  // Update live date & time at top
+  // ---------------- Live date & time ----------------
   function updateDateTime() {
     const now = new Date();
     const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
@@ -105,27 +162,32 @@
     const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
     document.getElementById("datetime").innerText = `${dateStr} | ${timeStr}`;
   }
-
   setInterval(updateDateTime, 1000);
   updateDateTime();
 
-  // Convert "HH:MM" string to minutes
+  // ---------------- Dark mode toggle ----------------
+  const toggleButton = document.getElementById("dark-mode-toggle");
+  toggleButton.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+  });
+
+  // ---------------- Helper function ----------------
   function timeToMinutes(time) {
     const [h, m] = time.split(':').map(Number);
     return h * 60 + m;
   }
 
-  // Display prayer times from timings.json and highlight next Salah
+  // ---------------- Display prayer times ----------------
   async function displayPrayerTimes() {
     try {
       const response = await fetch('timings.json');
       if (!response.ok) throw new Error("Failed to load timings.json");
 
       const prayerTimes = await response.json(); 
-
       const now = new Date();
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
+      // Determine next Salah
       let nextSalah = null;
       for (const [name, time] of Object.entries(prayerTimes)) {
         if (!time) continue;
@@ -136,6 +198,15 @@
         }
       }
 
+      // Update notification banner
+      const notifications = [
+        nextSalah ? `Next Salah: ${nextSalah} at ${prayerTimes[nextSalah]}` : "All Salahs completed for today",
+        "Welcome to Moghul Park Masjid!",
+        "Remember to perform Wudu before Salah"
+      ];
+      document.getElementById("notification-text").innerText = notifications.join(" — ");
+
+      // Build table
       let tableHTML = `<table>
         <tr><th>Prayer</th><th>Time</th></tr>`;
       for (const [name, time] of Object.entries(prayerTimes)) {
@@ -149,10 +220,10 @@
     } catch (error) {
       console.error(error);
       document.getElementById("prayer-times").innerText = "Failed to load prayer times.";
+      document.getElementById("notification-text").innerText = "Unable to load notifications.";
     }
   }
 
-  // Initial display
   displayPrayerTimes();
   setInterval(displayPrayerTimes, 60000);
 
