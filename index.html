@@ -190,11 +190,11 @@
   <div id="prayer-times">
     <table id="salahTable">
       <tr><th>Salah</th><th>Time</th></tr>
-      <tr data-salah="Fajr"><td>Fajr</td><td>05:00</td></tr>
-      <tr data-salah="Dhuhr"><td>Dhuhr</td><td>12:30</td></tr>
-      <tr data-salah="Asr"><td>Asr</td><td>15:45</td></tr>
-      <tr data-salah="Maghrib"><td>Maghrib</td><td>18:20</td></tr>
-      <tr data-salah="Isha"><td>Isha</td><td>19:45</td></tr>
+      <tr data-salah="Fajr"><td>Fajr</td><td>--:--</td></tr>
+      <tr data-salah="Dhuhr"><td>Dhuhr</td><td>--:--</td></tr>
+      <tr data-salah="Asr"><td>Asr</td><td>--:--</td></tr>
+      <tr data-salah="Maghrib"><td>Maghrib</td><td>--:--</td></tr>
+      <tr data-salah="Isha"><td>Isha</td><td>--:--</td></tr>
     </table>
   </div>
 
@@ -231,48 +231,53 @@
   setInterval(updateDateTime, 1000);
   updateDateTime();
 
-  // --- Salah Times ---
-  const salahTimes = {
-    Fajr: "05:00",
-    Dhuhr: "12:30",
-    Asr: "15:45",
-    Maghrib: "18:20",
-    Isha: "19:45"
-  };
+  // --- Load Salah Times from JSON ---
+  async function loadSalahTimes() {
+    try {
+      const response = await fetch('timings.json'); // put full path if on GitHub
+      const data = await response.json();
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const times = data[today];
 
-  function updateNextSalah() {
-    const now = new Date();
-    const times = Object.entries(salahTimes).map(([name,time])=>{
-      const [h,m] = time.split(":").map(Number);
-      const t = new Date();
-      t.setHours(h,m,0,0);
-      if(t<now) t.setDate(t.getDate()+1);
-      return {name,time:t};
-    });
+      // Update table
+      const table = document.getElementById("salahTable");
+      for (let i = 1; i < table.rows.length; i++) {
+        const salahName = table.rows[i].dataset.salah;
+        if(times[salahName]) table.rows[i].cells[1].textContent = times[salahName];
+      }
 
-    // Sort by time difference
-    times.sort((a,b)=>a.time-now - (b.time-now));
+      // Update next Salah in marquee
+      const now = new Date();
+      const nextSalahEntry = Object.entries(times).map(([name,time])=>{
+        const [h,m] = time.split(":").map(Number);
+        const t = new Date();
+        t.setHours(h,m,0,0);
+        if(t<now) t.setDate(t.getDate()+1);
+        return {name,time:t};
+      }).sort((a,b)=>a.time-now - (b.time-now))[0];
 
-    const next = times[0];
-    const diff = (next.time - now)/1000;
-    const hours = Math.floor(diff/3600);
-    const mins = Math.floor((diff%3600)/60);
+      const diff = (nextSalahEntry.time - now)/1000;
+      const hours = Math.floor(diff/3600);
+      const mins = Math.floor((diff%3600)/60);
 
-    // Update marquee with notifications
-    const marquee = document.getElementById("marqueeText");
-    let otherNotifs = marquee.dataset.extra || "";
-    if(otherNotifs) otherNotifs = " | " + otherNotifs;
-    marquee.textContent = `Notifications: Next Salah ${next.name} in ${hours}h ${mins}m${otherNotifs}`;
+      const marquee = document.getElementById("marqueeText");
+      let otherNotifs = marquee.dataset.extra || "";
+      if(otherNotifs) otherNotifs = " | " + otherNotifs;
+      marquee.textContent = `Notifications: Next Salah ${nextSalahEntry.name} in ${hours}h ${mins}m${otherNotifs}`;
 
-    // Highlight next Salah in table
-    document.querySelectorAll("#salahTable tr").forEach(row=>{
-      if(row.dataset.salah===next.name) row.classList.add("next-salah");
-      else row.classList.remove("next-salah");
-    });
+      // Highlight next Salah
+      document.querySelectorAll("#salahTable tr").forEach(row=>{
+        if(row.dataset.salah===nextSalahEntry.name) row.classList.add("next-salah");
+        else row.classList.remove("next-salah");
+      });
+
+    } catch(err) {
+      console.error("Failed to load timings.json:", err);
+    }
   }
 
-  updateNextSalah();
-  setInterval(updateNextSalah,60000);
+  loadSalahTimes();
+  setInterval(loadSalahTimes, 60000); // refresh every minute
 
   // --- Dark Mode Toggle ---
   document.getElementById("darkToggle").addEventListener("change",function(){
