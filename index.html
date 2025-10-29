@@ -14,7 +14,7 @@ body {
   text-align: center;
   min-height: 100vh;
   margin: 0;
-  padding: 0;
+  padding: 0 0 40px 0; /* padding bottom for footer */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -27,18 +27,22 @@ body.dark-mode {
   color: #eee;
 }
 
-/* Top banner */
-.banner {
+/* Common banner width & style */
+.banner, .datetime-container, .notification-banner, .footer-banner {
   width: 90%;
   max-width: 900px;
-  background: url('images.jpg') no-repeat center center;
-  background-size: cover;
   border-radius: 30px;
-  padding: 40px 20px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
   margin-top: 20px;
+  padding: 20px;
 }
 
+/* Top banner */
+.banner {
+  background: url('images.jpg') no-repeat center center;
+  background-size: cover;
+  padding: 40px 20px;
+}
 .banner h1 {
   margin: 0;
   font-size: 2.5rem;
@@ -46,53 +50,60 @@ body.dark-mode {
   text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
 }
 
-/* Date & live time below banner */
+/* Date & live time */
 .datetime-container {
-  width: 90%;
-  max-width: 900px;
   background-color: rgba(0,0,0,0.6);
-  border-radius: 20px;
-  padding: 12px 20px;
-  margin-top: 20px; /* move below banner */
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: bold;
   color: #fffa9e;
 }
 
-/* Notification banner with gold color */
+/* Notification banner with fade edges */
 .notification-banner {
-  width: 90%;
-  max-width: 900px;
   background-color: gold;
   color: #000;
-  padding: 12px 0;
   overflow: hidden;
-  border-radius: 20px;
-  margin-top: 15px;
   position: relative;
-}
-
-.notification-banner .marquee {
-  display: inline-block;
-  white-space: nowrap;
-  position: relative;
-  left: 50%; /* start at center */
-  transform: translateX(-50%);
-  animation: marquee 10s linear infinite;
-  font-size: 1.2rem;
+  padding: 12px 0;
   font-weight: bold;
 }
 
-@keyframes marquee {
-  0% { transform: translateX(-50%); } /* center */
-  100% { transform: translateX(-150%); } /* scroll left */
+.notification-banner::before,
+.notification-banner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 50px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
 }
 
-/* Toggle dark mode button */
+.notification-banner::before {
+  left: 0;
+  background: linear-gradient(to right, gold 0%, transparent 100%);
+}
+
+.notification-banner::after {
+  right: 0;
+  background: linear-gradient(to left, gold 0%, transparent 100%);
+}
+
+/* Moving text */
+.marquee {
+  display: inline-block;
+  white-space: nowrap;
+  position: relative;
+  animation: marquee 4s linear infinite;
+  font-size: 1.2rem;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); } /* start from right */
+  100% { transform: translateX(-100%); } /* end at left */
+}
+
+/* Dark mode toggle button */
 #dark-mode-toggle {
   margin-top: 15px;
   padding: 8px 16px;
@@ -113,8 +124,7 @@ body.dark-mode {
 table {
   margin: 20px auto;
   border-collapse: collapse;
-  width: 90%;
-  max-width: 600px;
+  width: 95%; /* Broader */
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   overflow: hidden;
@@ -145,104 +155,105 @@ tr:hover {
   transition: all 0.3s ease;
 }
 
+/* Footer banner */
+.footer-banner {
+  background-color: rgba(0,0,0,0.6);
+  color: #fffa9e;
+  padding: 10px;
+  margin-top: 30px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
 </style>
 </head>
 <body>
 
-  <!-- Top banner with Salah title -->
   <div class="banner">
-    <h1>Moghul Park Masjid Salah Times</h1>
+    <h1>Moghul Park Masjid Salah Time</h1>
   </div>
 
-  <!-- Date & live time below banner -->
   <div class="datetime-container" id="datetime"></div>
 
-  <!-- Moving notification banner -->
   <div class="notification-banner">
     <div class="marquee" id="notification-text">Loading notifications...</div>
   </div>
 
-  <!-- Dark mode toggle -->
   <button id="dark-mode-toggle">Toggle Dark Mode</button>
 
-  <!-- Prayer times table -->
   <div id="prayer-times">Loading today's times...</div>
 
+  <!-- Footer -->
+  <div class="footer-banner">
+    &copy; 2025 Moghul Park Masjid. All rights reserved.
+  </div>
+
 <script>
-  // ---------------- Live date & time ----------------
-  function updateDateTime() {
+function updateDateTime() {
+  const now = new Date();
+  const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+  const dateStr = now.toLocaleDateString(undefined, options);
+  const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+  document.getElementById("datetime").innerText = `${dateStr} | ${timeStr}`;
+}
+setInterval(updateDateTime, 1000);
+updateDateTime();
+
+document.getElementById("dark-mode-toggle").addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+});
+
+function timeToMinutes(time) {
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+}
+
+async function displayPrayerTimes() {
+  try {
+    const response = await fetch('timings.json');
+    if (!response.ok) throw new Error("Failed to load timings.json");
+
+    const prayerTimes = await response.json();
     const now = new Date();
-    const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-    const dateStr = now.toLocaleDateString(undefined, options);
-    const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
-    document.getElementById("datetime").innerText = `${dateStr} | ${timeStr}`;
-  }
-  setInterval(updateDateTime, 1000);
-  updateDateTime();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  // ---------------- Dark mode toggle ----------------
-  const toggleButton = document.getElementById("dark-mode-toggle");
-  toggleButton.addEventListener("click", () => {
-    document.body.classList.toggle("dark-mode");
-  });
-
-  // ---------------- Helper function ----------------
-  function timeToMinutes(time) {
-    const [h, m] = time.split(':').map(Number);
-    return h * 60 + m;
-  }
-
-  // ---------------- Display prayer times ----------------
-  async function displayPrayerTimes() {
-    try {
-      const response = await fetch('timings.json');
-      if (!response.ok) throw new Error("Failed to load timings.json");
-
-      const prayerTimes = await response.json(); 
-      const now = new Date();
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-      // Determine next Salah
-      let nextSalah = null;
-      for (const [name, time] of Object.entries(prayerTimes)) {
-        if (!time) continue;
-        const minutes = timeToMinutes(time);
-        if (minutes > currentMinutes) {
-          nextSalah = name;
-          break;
-        }
+    let nextSalah = null;
+    for (const [name, time] of Object.entries(prayerTimes)) {
+      if (!time) continue;
+      const minutes = timeToMinutes(time);
+      if (minutes > currentMinutes) {
+        nextSalah = name;
+        break;
       }
-
-      // Update notification banner
-      const notifications = [
-        nextSalah ? `Next Salah: ${nextSalah} at ${prayerTimes[nextSalah]}` : "All Salahs completed for today",
-        "Welcome to Moghul Park Masjid!",
-        "Remember to perform Wudu before Salah"
-      ];
-      document.getElementById("notification-text").innerText = notifications.join(" — ");
-
-      // Build table
-      let tableHTML = `<table>
-        <tr><th>Prayer</th><th>Time</th></tr>`;
-      for (const [name, time] of Object.entries(prayerTimes)) {
-        const highlightClass = name === nextSalah ? "next-salah" : "";
-        tableHTML += `<tr class="${highlightClass}"><td>${name}</td><td>${time}</td></tr>`;
-      }
-      tableHTML += `</table>`;
-
-      document.getElementById("prayer-times").innerHTML = tableHTML;
-
-    } catch (error) {
-      console.error(error);
-      document.getElementById("prayer-times").innerText = "Failed to load prayer times.";
-      document.getElementById("notification-text").innerText = "Unable to load notifications.";
     }
+
+    // Update notification
+    const notifications = [
+      nextSalah ? `Next Salah: ${nextSalah} at ${prayerTimes[nextSalah]}` : "All Salahs completed for today",
+      "Welcome to Moghul Park Masjid!",
+      "Remember to perform Wudu before Salah"
+    ];
+    document.getElementById("notification-text").innerText = notifications.join(" — ");
+
+    // Build table
+    let tableHTML = `<table>
+      <tr><th>Prayer</th><th>Time</th></tr>`;
+    for (const [name, time] of Object.entries(prayerTimes)) {
+      const highlightClass = name === nextSalah ? "next-salah" : "";
+      tableHTML += `<tr class="${highlightClass}"><td>${name}</td><td>${time}</td></tr>`;
+    }
+    tableHTML += `</table>`;
+    document.getElementById("prayer-times").innerHTML = tableHTML;
+
+  } catch (error) {
+    console.error(error);
+    document.getElementById("prayer-times").innerText = "Failed to load prayer times.";
+    document.getElementById("notification-text").innerText = "Unable to load notifications.";
   }
+}
 
-  displayPrayerTimes();
-  setInterval(displayPrayerTimes, 60000);
-
+displayPrayerTimes();
+setInterval(displayPrayerTimes, 60000);
 </script>
-
 </body>
 </html>
