@@ -73,7 +73,7 @@
 
   @keyframes scroll {
     0% { transform: translateX(0%); }
-    100% { transform: translateX(-100%); } /* fully exit before looping */
+    100% { transform: translateX(-100%); }
   }
 
   /* Salah Table */
@@ -182,7 +182,7 @@
   <div class="notification-banner">
     <div class="marquee-track">
       <span class="marquee-text" id="marqueeText" data-extra="Jumu'ah this Friday at 12:30 | Masjid closed tomorrow | عفھءیعوفیءوعفءھءعفھ">
-        Notifications: Welcome!
+        Notifications: Loading...
       </span>
     </div>
   </div>
@@ -231,13 +231,12 @@
   setInterval(updateDateTime, 1000);
   updateDateTime();
 
-  // --- Load Salah Times from JSON ---
+  // --- Load Salah Times from flat JSON ---
   async function loadSalahTimes() {
     try {
-      const response = await fetch('timings.json'); // put full path if on GitHub
+      const response = await fetch('timings.json'); // flat JSON
       const data = await response.json();
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-      const times = data[today];
+      const times = data; // flat structure
 
       // Update table
       const table = document.getElementById("salahTable");
@@ -246,7 +245,7 @@
         if(times[salahName]) table.rows[i].cells[1].textContent = times[salahName];
       }
 
-      // Update next Salah in marquee
+      // Determine next Salah
       const now = new Date();
       const nextSalahEntry = Object.entries(times).map(([name,time])=>{
         const [h,m] = time.split(":").map(Number);
@@ -260,6 +259,7 @@
       const hours = Math.floor(diff/3600);
       const mins = Math.floor((diff%3600)/60);
 
+      // Update marquee with notifications + next Salah
       const marquee = document.getElementById("marqueeText");
       let otherNotifs = marquee.dataset.extra || "";
       if(otherNotifs) otherNotifs = " | " + otherNotifs;
