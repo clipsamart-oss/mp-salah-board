@@ -13,7 +13,6 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
     margin: 0;
     transition: background 0.5s, color 0.5s;
   }
@@ -23,10 +22,9 @@
     color: #f2f2f2;
   }
 
-  /* Banner full width */
+  /* Top Banner */
   .banner {
     width: 100%;
-    margin: 0;
     padding: 40px 0;
     background: url('images.jpg') no-repeat center center/cover;
     color: white;
@@ -40,14 +38,13 @@
     text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
   }
 
-  /* Date and Time Section */
   #date-time {
     font-size: 1.3rem;
     margin-top: 10px;
     color: #fffa9e;
   }
 
-  /* Moving Marquee Banner (starts center) */
+  /* Notification Banner */
   .notification-banner {
     position: relative;
     width: 90%;
@@ -56,27 +53,30 @@
     background: linear-gradient(90deg, #b8860b, #ffd700);
     color: black;
     border-radius: 12px;
-    height: 40px;
+    height: 50px;
+    display: flex;
+    align-items: center;
     box-shadow: 0 0 10px rgba(255,215,0,0.4);
+    font-weight: bold;
   }
 
-  .marquee {
+  .marquee-track {
     display: inline-block;
     white-space: nowrap;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-weight: bold;
-    animation: marquee 10s linear infinite;
+    animation: scroll 15s linear infinite;
   }
 
-  @keyframes marquee {
-    0% { transform: translateX(-50%) translateY(-50%); }
-    100% { transform: translateX(150%) translateY(-50%); }
+  .marquee-text {
+    display: inline-block;
+    padding-left: 50%; /* start from center */
   }
 
-  /* Salah Times Table */
+  @keyframes scroll {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* Salah Table */
   table {
     margin: 30px auto;
     border-collapse: collapse;
@@ -108,36 +108,7 @@
     color: black;
   }
 
-  /* Qiblah Compass */
-  #compass {
-    position: relative;
-    width: 220px;
-    height: 220px;
-    border: 5px solid gold;
-    border-radius: 50%;
-    margin: 20px auto;
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-  }
-
-  #arrow {
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 6px; height: 90px;
-    background: gold;
-    border-radius: 3px;
-    transform-origin: bottom center;
-    transform: rotate(0deg) translate(-50%, -100%);
-    transition: transform 0.6s ease-in-out;
-  }
-
-  #status {
-    margin-top: 15px;
-    font-size: 1.2rem;
-    color: #fffa9e;
-  }
-
-  /* Toggle and Button Row */
+  /* Controls */
   .controls {
     display: flex;
     justify-content: center;
@@ -185,30 +156,35 @@
     cursor: pointer;
   }
 
-  /* Footer fixed at bottom edge-to-edge */
+  /* Footer */
   footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
+    margin-top: auto;
     width: 100%;
     background: linear-gradient(90deg, #b8860b, #ffd700);
     color: black;
-    padding: 10px;
+    padding: 30px 0;
     font-weight: bold;
     text-align: center;
-    z-index: 10;
+    line-height: 1.5;
   }
+
 </style>
 </head>
 <body>
+
   <div class="banner">
     <h1>Moghul Park Masjid Salah Times</h1>
   </div>
 
   <div id="date-time"></div>
 
+  <!-- Notification Banner -->
   <div class="notification-banner">
-    <div class="marquee" id="marqueeText">Loading next Salah...</div>
+    <div class="marquee-track">
+      <span class="marquee-text" id="marqueeText" data-extra="Jumu'ah this Friday at 12:30 | Masjid closed tomorrow | عفھءیعوفیءوعفءھءعفھ">
+        Notifications: Welcome!
+      </span>
+    </div>
   </div>
 
   <div id="prayer-times">
@@ -229,7 +205,6 @@
     <button class="download-btn" onclick="downloadPDF()">Download PDF</button>
   </div>
 
-  <!-- Google Qiblah Finder Section -->
   <section style="text-align:center;background:linear-gradient(to bottom right,#064420,#4a3f35);color:white;padding:60px 20px;border-top:5px solid #c2a15a;">
     <h1 style="font-size:2.2em;margin-bottom:15px;letter-spacing:1px;">🕋 Find Your Qiblah Direction</h1>
     <p style="font-size:1.1em;margin-bottom:25px;color:#f5f5f5;">Click the button below to open Google’s official Qiblah Finder. It will detect your location and show you the direction of the Kaaba with precision.</p>
@@ -242,69 +217,82 @@
   </section>
 
   <footer>
-    © 2025 Moghul Park Masjid — All Rights Reserved
+    © 2025 Moghul Park Masjid — All Rights Reserved<br>
+    Powered by MR
   </footer>
 
-  <script>
-    // --- Date & Time ---
-    function updateDateTime() {
-      const now = new Date();
-      document.getElementById("date-time").textContent =
-        now.toLocaleDateString() + " | " + now.toLocaleTimeString();
-    }
-    setInterval(updateDateTime, 1000);
-    updateDateTime();
+<script>
+  // --- Date & Time ---
+  function updateDateTime() {
+    const now = new Date();
+    document.getElementById("date-time").textContent =
+      now.toLocaleDateString() + " | " + now.toLocaleTimeString();
+  }
+  setInterval(updateDateTime, 1000);
+  updateDateTime();
 
-    // --- Next Salah Countdown & Highlight ---
-    const salahTimes = {
-      Fajr: "05:00",
-      Dhuhr: "12:30",
-      Asr: "15:45",
-      Maghrib: "18:20",
-      Isha: "19:45"
-    };
+  // --- Salah Times ---
+  const salahTimes = {
+    Fajr: "05:00",
+    Dhuhr: "12:30",
+    Asr: "15:45",
+    Maghrib: "18:20",
+    Isha: "19:45"
+  };
 
-    function updateNextSalah() {
-      const now = new Date();
-      const times = Object.entries(salahTimes).map(([name, time]) => {
-        const [h, m] = time.split(":").map(Number);
-        const t = new Date();
-        t.setHours(h, m, 0);
-        if (t < now) t.setDate(t.getDate() + 1); // next day if passed
-        return { name, time: t };
-      });
+  function getNextSalah() {
+    const now = new Date();
+    const times = Object.entries(salahTimes).map(([name,time]) => {
+      const [h,m] = time.split(":").map(Number);
+      const t = new Date();
+      t.setHours(h,m,0);
+      if(t<now) t.setDate(t.getDate()+1);
+      return {name,time:t};
+    });
+    // Find first Salah after now
+    return times.reduce((a,b)=> a.time>now && a.time<b.time ? a : b);
+  }
 
-      const next = times.reduce((a, b) => (a.time < b.time ? a : b));
-      const diff = (next.time - now) / 1000;
-      const h = Math.floor(diff / 3600);
-      const m = Math.floor((diff % 3600) / 60);
-
-      // Update marquee
-      document.getElementById("marqueeText").textContent =
-        `Next Salah: ${next.name} in ${h}h ${m}m`;
-
-      // Highlight next Salah in table
-      document.querySelectorAll("#salahTable tr").forEach(row => {
-        if (row.dataset.salah === next.name) {
-          row.classList.add("next-salah");
-        } else {
-          row.classList.remove("next-salah");
-        }
-      });
-    }
-
-    updateNextSalah(); // run immediately
-    setInterval(updateNextSalah, 60000);
-
-    // --- Dark Mode Toggle ---
-    document.getElementById("darkToggle").addEventListener("change", function() {
-      document.body.classList.toggle("dark", this.checked);
+  function updateNextSalah() {
+    const now = new Date();
+    const times = Object.entries(salahTimes).map(([name,time]) => {
+      const [h,m] = time.split(":").map(Number);
+      const t = new Date();
+      t.setHours(h,m,0);
+      if(t<now) t.setDate(t.getDate()+1);
+      return {name,time:t};
     });
 
-    // --- Download PDF (placeholder) ---
-    function downloadPDF() {
-      alert("This will download Salah times as a PDF (to be implemented).");
-    }
-  </script>
+    const next = times.find(t=>t.time>now) || times[0];
+    const diff = (next.time - now)/1000;
+    const hours = Math.floor(diff/3600);
+    const mins = Math.floor((diff%3600)/60);
+
+    // Update marquee text with notifications
+    const marquee = document.getElementById("marqueeText");
+    let otherNotifs = marquee.dataset.extra || "";
+    if(otherNotifs) otherNotifs = " | " + otherNotifs;
+    marquee.textContent = `Notifications: Next Salah ${next.name} in ${hours}h ${mins}m${otherNotifs}`;
+
+    // Highlight next Salah in table
+    document.querySelectorAll("#salahTable tr").forEach(row=>{
+      if(row.dataset.salah===next.name) row.classList.add("next-salah");
+      else row.classList.remove("next-salah");
+    });
+  }
+
+  updateNextSalah();
+  setInterval(updateNextSalah,60000);
+
+  // --- Dark Mode Toggle ---
+  document.getElementById("darkToggle").addEventListener("change",function(){
+    document.body.classList.toggle("dark",this.checked);
+  });
+
+  function downloadPDF() {
+    alert("This will download Salah times as a PDF (to be implemented).");
+  }
+
+</script>
 </body>
 </html>
