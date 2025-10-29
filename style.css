@@ -12,6 +12,12 @@ body {
 h1 {
   font-size: 2.5rem;
   margin-bottom: 20px;
+  padding: 60px 20px; /* height of banner */
+  background: url('images.jpg') no-repeat center center;
+  background-size: cover; /* make image cover the header */
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.7); /* text readability */
+  border-radius: 12px; /* optional rounded edges */
 }
 
 #clock, #hijri {
