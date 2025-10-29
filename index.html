@@ -23,20 +23,20 @@
     color: #f2f2f2;
   }
 
-  /* Banner with image */
+  /* Banner full width */
   .banner {
-    width: 90%;
-    margin: 20px auto;
-    padding: 20px;
+    width: 100%;
+    margin: 0;
+    padding: 40px 0;
     background: url('images.jpg') no-repeat center center/cover;
     color: white;
-    border-radius: 40px 40px 80px 80px;
+    text-align: center;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
   }
 
   .banner h1 {
     margin: 0;
-    font-size: 2.3rem;
+    font-size: 2.5rem;
     text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
   }
 
@@ -47,7 +47,7 @@
     color: #fffa9e;
   }
 
-  /* Moving Marquee Banner (left-to-right) */
+  /* Moving Marquee Banner */
   .notification-banner {
     position: relative;
     width: 90%;
@@ -64,10 +64,11 @@
     display: inline-block;
     white-space: nowrap;
     position: absolute;
-    animation: marquee 10s linear infinite;
     top: 50%;
+    left: -100%; /* start off-screen immediately */
     transform: translateY(-50%);
     font-weight: bold;
+    animation: marquee 10s linear infinite;
   }
 
   @keyframes marquee {
@@ -178,7 +179,7 @@
     cursor: pointer;
   }
 
-  /* Footer fixed at bottom */
+  /* Footer fixed at bottom edge-to-edge */
   footer {
     position: fixed;
     bottom: 0;
@@ -275,8 +276,8 @@
       document.getElementById("marqueeText").textContent =
         `Next Salah: ${next.name} in ${h}h ${m}m`;
     }
+    updateNextSalah(); // run immediately
     setInterval(updateNextSalah, 60000);
-    updateNextSalah();
 
     // --- Dark Mode Toggle ---
     document.getElementById("darkToggle").addEventListener("change", function() {
