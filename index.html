@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Moghul Park Masjid Salah Times</title>
 <style>
   body {
@@ -175,7 +175,7 @@
 
   <div class="notification-banner">
     <div class="marquee-track">
-      <span class="marquee-text" id="marqueeText" data-extra="Jumu'ah this Friday at 12:30 | Masjid timetable can be downloaded by clicking the red downlaod button | Dhikr every Thurday after Esha Salah">
+      <span class="marquee-text" id="marqueeText" data-extra="Jumu'ah this Friday at 12:30 | Masjid closed tomorrow">
         Notifications: Loading...
       </span>
     </div>
@@ -199,18 +199,16 @@
     <button class="download-btn" onclick="downloadPDF()">Download Salah Board</button>
   </div>
 
-  <!-- 🔹 ADD YOUR IMAGE BELOW -->
-  <!-- Example: change 'salahboard.jpg' to your actual image name -->
+  <!-- Hidden image for PDF -->
   <img id="salahImage" src="MPM.jpg" alt="Salah Board" style="display:none;">
 
   <section style="text-align:center;background:linear-gradient(to bottom right,#064420,#4a3f35);color:white;padding:60px 20px;border-top:5px solid #c2a15a;">
-    <h1 style="font-size:2.2em;margin-bottom:15px;letter-spacing:1px;">🕋 Find Your Qiblah Direction</h1>
-    <p style="font-size:1.1em;margin-bottom:25px;color:#f5f5f5;">Click the button below to open Google’s official Qiblah Finder. It will detect your location and show you the direction of the Kaaba with precision.</p>
-    
-    <div style="display:inline-block;background:white;color:#333;border-radius:15px;padding:30px;box-shadow:0 6px 20px rgba(0,0,0,0.3);transition:transform 0.4s ease, box-shadow 0.4s ease;">
+    <h1 style="font-size:2.2em;margin-bottom:15px;">🕋 Find Your Qiblah Direction</h1>
+    <p style="font-size:1.1em;margin-bottom:25px;color:#f5f5f5;">Click below to open Google’s official Qiblah Finder. It will detect your location and show the direction of the Kaaba.</p>
+    <div style="display:inline-block;background:white;color:#333;border-radius:15px;padding:30px;box-shadow:0 6px 20px rgba(0,0,0,0.3);">
       <img src="https://upload.wikimedia.org/wikipedia/commons/d/d1/Kaaba_Mecca.png" alt="Kaaba" style="width:160px;height:auto;margin-bottom:20px;border-radius:10px;">
       <br>
-      <a href="https://qiblafinder.withgoogle.com/" target="_blank" style="background:#064420;color:white;border:none;padding:12px 25px;font-size:1.1em;border-radius:8px;text-decoration:none;transition:background 0.3s ease;">🧭 Open Qiblah Finder</a>
+      <a href="https://qiblafinder.withgoogle.com/" target="_blank" style="background:#064420;color:white;border:none;padding:12px 25px;font-size:1.1em;border-radius:8px;text-decoration:none;">🧭 Open Qiblah Finder</a>
     </div>
   </section>
 
@@ -221,7 +219,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-  // --- Date & Time ---
   function updateDateTime() {
     const now = new Date();
     document.getElementById("date-time").textContent =
@@ -230,75 +227,79 @@
   setInterval(updateDateTime, 1000);
   updateDateTime();
 
-  // --- Load Salah Times from flat JSON ---
+  // ✅ Load today's Salah times from 30-day JSON
   async function loadSalahTimes() {
     try {
-      const response = await fetch('timings.json');
+      const response = await fetch("timings.json");
       const data = await response.json();
-      const times = data;
+
+      const today = new Date().toISOString().split("T")[0];
+      const times = data[today];
+      if (!times) {
+        console.warn("No timings found for today in JSON");
+        return;
+      }
 
       const table = document.getElementById("salahTable");
       for (let i = 1; i < table.rows.length; i++) {
         const salahName = table.rows[i].dataset.salah;
-        if(times[salahName]) table.rows[i].cells[1].textContent = times[salahName];
+        if (times[salahName]) table.rows[i].cells[1].textContent = times[salahName];
       }
 
+      // --- Next Salah ---
       const now = new Date();
-      const nextSalahEntry = Object.entries(times).map(([name,time])=>{
-        const [h,m] = time.split(":").map(Number);
-        const t = new Date();
-        t.setHours(h,m,0,0);
-        if(t<now) t.setDate(t.getDate()+1);
-        return {name,time:t};
-      }).sort((a,b)=>a.time-now - (b.time-now))[0];
+      const nextSalahEntry = Object.entries(times)
+        .map(([name, time]) => {
+          const [h, m] = time.split(":").map(Number);
+          const t = new Date();
+          t.setHours(h, m, 0, 0);
+          if (t < now) t.setDate(t.getDate() + 1);
+          return { name, time: t };
+        })
+        .sort((a, b) => a.time - b.time)[0];
 
-      const diff = (nextSalahEntry.time - now)/1000;
-      const hours = Math.floor(diff/3600);
-      const mins = Math.floor((diff%3600)/60);
+      const diff = (nextSalahEntry.time - now) / 1000;
+      const hours = Math.floor(diff / 3600);
+      const mins = Math.floor((diff % 3600) / 60);
 
       const marquee = document.getElementById("marqueeText");
       let otherNotifs = marquee.dataset.extra || "";
-      if(otherNotifs) otherNotifs = " | " + otherNotifs;
+      if (otherNotifs) otherNotifs = " | " + otherNotifs;
       marquee.textContent = `Notifications: Next Salah ${nextSalahEntry.name} in ${hours}h ${mins}m${otherNotifs}`;
 
-      document.querySelectorAll("#salahTable tr").forEach(row=>{
-        if(row.dataset.salah===nextSalahEntry.name) row.classList.add("next-salah");
+      document.querySelectorAll("#salahTable tr").forEach(row => {
+        if (row.dataset.salah === nextSalahEntry.name) row.classList.add("next-salah");
         else row.classList.remove("next-salah");
       });
-
-    } catch(err) {
+    } catch (err) {
       console.error("Failed to load timings.json:", err);
     }
   }
+
   loadSalahTimes();
   setInterval(loadSalahTimes, 60000);
 
-  // --- Dark Mode Toggle ---
-  document.getElementById("darkToggle").addEventListener("change",function(){
-    document.body.classList.toggle("dark",this.checked);
+  document.getElementById("darkToggle").addEventListener("change", function () {
+    document.body.classList.toggle("dark", this.checked);
   });
 
-  // --- Download Image as PDF ---
   async function downloadPDF() {
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF();
+    const img = document.getElementById("salahImage");
 
-    const img = document.getElementById('salahImage');
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
     ctx.drawImage(img, 0, 0);
-    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+    const imgData = canvas.toDataURL("image/jpeg", 1.0);
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (img.naturalHeight * pdfWidth) / img.naturalWidth;
-
-    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
     pdf.save("Salah_Board.pdf");
   }
 </script>
-
 </body>
 </html>
-
