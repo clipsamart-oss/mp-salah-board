@@ -22,7 +22,6 @@
     color: #f2f2f2;
   }
 
-  /* Top Banner */
   .banner {
     width: 100%;
     padding: 40px 0;
@@ -44,7 +43,6 @@
     color: #fffa9e;
   }
 
-  /* Notification Banner */
   .notification-banner {
     position: relative;
     width: 90%;
@@ -69,7 +67,7 @@
   .marquee-text {
     display: inline-block;
     padding-left: 5%;
-    line-height: 50px; /* vertical centering */
+    line-height: 50px;
   }
 
   @keyframes scroll {
@@ -77,7 +75,6 @@
     100% { transform: translateX(-100%); }
   }
 
-  /* Salah Table */
   table {
     margin: 30px auto;
     border-collapse: collapse;
@@ -109,7 +106,6 @@
     color: black;
   }
 
-  /* Controls */
   .controls {
     display: flex;
     justify-content: center;
@@ -157,7 +153,6 @@
     cursor: pointer;
   }
 
-  /* Footer */
   footer {
     width: 100%;
     background: linear-gradient(90deg, #b8860b, #ffd700);
@@ -168,7 +163,6 @@
     line-height: 1.5;
     margin-top: auto;
   }
-
 </style>
 </head>
 <body>
@@ -179,7 +173,6 @@
 
   <div id="date-time"></div>
 
-  <!-- Notification Banner -->
   <div class="notification-banner">
     <div class="marquee-track">
       <span class="marquee-text" id="marqueeText" data-extra="Jumu'ah this Friday at 12:30 | Masjid closed tomorrow | عفھءیعوفیءوعفءھءعفھ">
@@ -203,8 +196,12 @@
     <label>
       <input type="checkbox" id="darkToggle" class="ios-toggle">
     </label>
-    <button class="download-btn" onclick="downloadPDF()">Download PDF</button>
+    <button class="download-btn" onclick="downloadPDF()">Download Salah Board</button>
   </div>
+
+  <!-- 🔹 ADD YOUR IMAGE BELOW -->
+  <!-- Example: change 'salahboard.jpg' to your actual image name -->
+  <img id="salahImage" src="MPM.jpg" alt="Salah Board" style="display:none;">
 
   <section style="text-align:center;background:linear-gradient(to bottom right,#064420,#4a3f35);color:white;padding:60px 20px;border-top:5px solid #c2a15a;">
     <h1 style="font-size:2.2em;margin-bottom:15px;letter-spacing:1px;">🕋 Find Your Qiblah Direction</h1>
@@ -236,18 +233,16 @@
   // --- Load Salah Times from flat JSON ---
   async function loadSalahTimes() {
     try {
-      const response = await fetch('timings.json'); // flat JSON
+      const response = await fetch('timings.json');
       const data = await response.json();
-      const times = data; // flat structure
+      const times = data;
 
-      // Update table
       const table = document.getElementById("salahTable");
       for (let i = 1; i < table.rows.length; i++) {
         const salahName = table.rows[i].dataset.salah;
         if(times[salahName]) table.rows[i].cells[1].textContent = times[salahName];
       }
 
-      // Determine next Salah
       const now = new Date();
       const nextSalahEntry = Object.entries(times).map(([name,time])=>{
         const [h,m] = time.split(":").map(Number);
@@ -261,13 +256,11 @@
       const hours = Math.floor(diff/3600);
       const mins = Math.floor((diff%3600)/60);
 
-      // Update marquee with notifications + next Salah
       const marquee = document.getElementById("marqueeText");
       let otherNotifs = marquee.dataset.extra || "";
       if(otherNotifs) otherNotifs = " | " + otherNotifs;
       marquee.textContent = `Notifications: Next Salah ${nextSalahEntry.name} in ${hours}h ${mins}m${otherNotifs}`;
 
-      // Highlight next Salah
       document.querySelectorAll("#salahTable tr").forEach(row=>{
         if(row.dataset.salah===nextSalahEntry.name) row.classList.add("next-salah");
         else row.classList.remove("next-salah");
@@ -277,35 +270,33 @@
       console.error("Failed to load timings.json:", err);
     }
   }
-
   loadSalahTimes();
-  setInterval(loadSalahTimes, 60000); // refresh every minute
+  setInterval(loadSalahTimes, 60000);
 
   // --- Dark Mode Toggle ---
   document.getElementById("darkToggle").addEventListener("change",function(){
     document.body.classList.toggle("dark",this.checked);
   });
 
-  // --- Download PDF using jsPDF ---
-  function downloadPDF() {
+  // --- Download Image as PDF ---
+  async function downloadPDF() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Moghul Park Masjid Salah Times", 105, 20, null, null, "center");
-    const now = new Date();
-    doc.setFontSize(12);
-    doc.text("Date: " + now.toLocaleDateString(), 105, 30, null, null, "center");
-    const table = document.getElementById("salahTable");
-    let y = 45;
-    for (let i = 1; i < table.rows.length; i++) {
-      const salah = table.rows[i].cells[0].textContent;
-      const time = table.rows[i].cells[1].textContent;
-      doc.text(`${salah}: ${time}`, 20, y);
-      y += 10;
-    }
-    doc.save("Salah_Times.pdf");
-  }
+    const pdf = new jsPDF();
 
+    const img = document.getElementById('salahImage');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    ctx.drawImage(img, 0, 0);
+    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (img.naturalHeight * pdfWidth) / img.naturalWidth;
+
+    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save("Salah_Board.pdf");
+  }
 </script>
 
 </body>
